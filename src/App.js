@@ -1,25 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useCallback, useRef } from 'react';
+
+import FloatingWindow from './components/FloatingWindow';
+// import ContentBlock from './components/ContentBlock';
+
+import './App.scss';
+import content from './content';
+
+const coef = 0.05;
 
 function App() {
+  let ssDist = useRef(0);
+
+  const heightShim = useRef();
+  const headings = useRef([]);
+
+  const ss = useCallback(() => {
+    ssDist.current += Math.floor((window.pageYOffset - ssDist.current) * coef);
+    heightShim.current.style.transform = `translate3D(0, -${ssDist.current}px, 0)`;
+    requestAnimationFrame(ss);
+  }, []);
+
+  useEffect(() => {
+    const contentHeight = Math.floor(heightShim.current.getBoundingClientRect().height);
+    document.body.style.height = `${contentHeight}px`;
+    ss();
+  }, [ss]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <FloatingWindow />
+      <div className="ss__outer" >
+        <div className="ss__inner">
+          <div className="col col--md" ref={heightShim}>
+          {content.map(({ heading, body }, i) => 
+            <article
+              className="row row--md block"
+              ref={ref => headings.current.push(ref)}
+              key={i}
+            >
+              <h1>{heading}</h1>
+              {body.map((line, i) => <p key={i}>{line}</p>)}
+            </article>)}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
